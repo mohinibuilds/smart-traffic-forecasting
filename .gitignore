@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# Trained model files (too large for GitHub — auto-generated on first run)
+models/saved/*.pkl
+models/saved/*.keras
+models/saved/*.h5
+
+# Generated data (auto-generated on first run)
+data/raw/traffic_data.csv
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db

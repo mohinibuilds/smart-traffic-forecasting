@@ -17,6 +17,10 @@ import os
 import sys
 import warnings
 
+# Fix Windows encoding so ✓ and other unicode chars don't crash the app
+os.environ["PYTHONUTF8"] = "1"
+os.environ["PYTHONIOENCODING"] = "utf-8"
+
 warnings.filterwarnings("ignore")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -57,6 +61,19 @@ st.markdown(
     .severity-low    { color: #2ecc71; font-weight: 700; font-size: 1.4rem; }
     .severity-medium { color: #f39c12; font-weight: 700; font-size: 1.4rem; }
     .severity-high   { color: #e74c3c; font-weight: 700; font-size: 1.4rem; }
+
+    /* Make the search input box stand out in sidebar */
+    section[data-testid="stSidebar"] input[type="text"] {
+        border: 2px solid #3b82d4 !important;
+        border-radius: 6px !important;
+        font-size: 0.95rem !important;
+        padding: 8px 10px !important;
+        background: #ffffff !important;
+    }
+    section[data-testid="stSidebar"] input[type="text"]:focus {
+        border-color: #1d4ed8 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,212,0.2) !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -202,6 +219,344 @@ def forecast_ahead(
 
 
 # ────────────────────────────────────────────────
+# WORLD LOCATION DATABASE
+# Each entry: (Country, State/Province, City, Representative Segment 1-10, Key Road/District)
+# ────────────────────────────────────────────────
+
+WORLD_LOCATIONS = [
+    # ── INDIA ──
+    ("India", "Maharashtra", "Mumbai",      1, "Western Express Highway"),
+    ("India", "Maharashtra", "Pune",        2, "FC Road / Hinjewadi"),
+    ("India", "Maharashtra", "Nagpur",      3, "Wardha Road"),
+    ("India", "Maharashtra", "Nashik",      4, "Mumbai-Agra Highway"),
+    ("India", "Delhi",       "New Delhi",   5, "Connaught Place / NH-48"),
+    ("India", "Delhi",       "Gurugram",    6, "Golf Course Road"),
+    ("India", "Karnataka",   "Bengaluru",   7, "MG Road / ORR"),
+    ("India", "Karnataka",   "Mysuru",      8, "Hunsur Road"),
+    ("India", "Telangana",   "Hyderabad",   9, "Hitech City / Jubilee Hills"),
+    ("India", "Tamil Nadu",  "Chennai",    10, "Anna Salai / OMR"),
+    ("India", "Tamil Nadu",  "Coimbatore",  1, "Avinashi Road"),
+    ("India", "West Bengal", "Kolkata",     2, "EM Bypass / VIP Road"),
+    ("India", "Gujarat",     "Ahmedabad",   3, "SG Highway"),
+    ("India", "Gujarat",     "Surat",       4, "Ring Road"),
+    ("India", "Rajasthan",   "Jaipur",      5, "Ajmer Road"),
+    ("India", "Uttar Pradesh","Lucknow",    6, "Hazratganj / Gomti Nagar"),
+    ("India", "Uttar Pradesh","Kanpur",     7, "GT Road"),
+    ("India", "Uttar Pradesh","Agra",       8, "Yamuna Expressway"),
+    ("India", "Punjab",      "Chandigarh",  9, "Sector 17 / IT Park"),
+    ("India", "Punjab",      "Ludhiana",   10, "Ferozepur Road"),
+    ("India", "Madhya Pradesh","Bhopal",    1, "Hoshangabad Road"),
+    ("India", "Madhya Pradesh","Indore",    2, "AB Road / Ring Road"),
+    ("India", "Bihar",       "Patna",       3, "Bailey Road"),
+    ("India", "Odisha",      "Bhubaneswar", 4, "NH-16 Corridor"),
+    ("India", "Kerala",      "Thiruvananthapuram", 5, "NH-66"),
+    ("India", "Kerala",      "Kochi",       6, "NH-544 / Edapally"),
+    ("India", "Assam",       "Guwahati",    7, "GS Road"),
+    ("India", "Jharkhand",   "Ranchi",      8, "Kanke Road"),
+    ("India", "Chhattisgarh","Raipur",      9, "National Highway 53"),
+    ("India", "Goa",         "Panaji",     10, "NH-66 Coastal"),
+    # ── USA ──
+    ("USA", "California",   "Los Angeles",    1, "I-405 / Hollywood Freeway"),
+    ("USA", "California",   "San Francisco",  2, "Bay Bridge / 101"),
+    ("USA", "California",   "San Diego",      3, "I-8 / Cabrillo Freeway"),
+    ("USA", "New York",     "New York City",  4, "I-278 / FDR Drive"),
+    ("USA", "New York",     "Buffalo",        5, "I-90 Thruway"),
+    ("USA", "Texas",        "Houston",        6, "I-610 Loop"),
+    ("USA", "Texas",        "Dallas",         7, "I-35E / LBJ Freeway"),
+    ("USA", "Texas",        "Austin",         8, "MoPac Expressway"),
+    ("USA", "Florida",      "Miami",          9, "I-95 / Brickell"),
+    ("USA", "Florida",      "Orlando",       10, "I-4 Corridor"),
+    ("USA", "Illinois",     "Chicago",        1, "I-90 / Lake Shore Drive"),
+    ("USA", "Washington",   "Seattle",        2, "I-5 / SR-520"),
+    ("USA", "Nevada",       "Las Vegas",      3, "Las Vegas Blvd / I-15"),
+    ("USA", "Arizona",      "Phoenix",        4, "I-10 / Loop 101"),
+    ("USA", "Georgia",      "Atlanta",        5, "I-285 / GA-400"),
+    ("USA", "Massachusetts","Boston",         6, "I-93 / Mass Pike"),
+    ("USA", "Pennsylvania", "Philadelphia",   7, "I-76 / Schuylkill"),
+    ("USA", "Michigan",     "Detroit",        8, "I-75 / Lodge Freeway"),
+    ("USA", "Colorado",     "Denver",         9, "I-25 / E-470"),
+    ("USA", "Oregon",       "Portland",      10, "I-84 / Burnside Bridge"),
+    # ── UK ──
+    ("UK", "England",       "London",         1, "M25 / A406 North Circular"),
+    ("UK", "England",       "Manchester",     2, "M60 Orbital / A57"),
+    ("UK", "England",       "Birmingham",     3, "M6 / Spaghetti Junction"),
+    ("UK", "England",       "Leeds",          4, "M1 / A64"),
+    ("UK", "England",       "Liverpool",      5, "M62 / A5058"),
+    ("UK", "Scotland",      "Glasgow",        6, "M8 / Kingston Bridge"),
+    ("UK", "Scotland",      "Edinburgh",      7, "A720 City Bypass"),
+    ("UK", "Wales",         "Cardiff",        8, "M4 / A48"),
+    ("UK", "England",       "Bristol",        9, "M32 / Clifton Bridge"),
+    ("UK", "England",       "Sheffield",     10, "M1 / Parkway"),
+    # ── GERMANY ──
+    ("Germany", "Bavaria",          "Munich",      1, "A8 / Mittlerer Ring"),
+    ("Germany", "Berlin",           "Berlin",      2, "A100 / Stadtautobahn"),
+    ("Germany", "Hamburg",          "Hamburg",     3, "A7 / Reeperbahn"),
+    ("Germany", "North Rhine-Westphalia","Cologne", 4, "A3 / Leverkusener Brücke"),
+    ("Germany", "Hesse",            "Frankfurt",   5, "A3 / A5 Interchange"),
+    ("Germany", "Baden-Württemberg","Stuttgart",   6, "A8 / B14"),
+    ("Germany", "Saxony",           "Dresden",     7, "A4 / B170"),
+    ("Germany", "Lower Saxony",     "Hanover",     8, "A2 / Messeschnellweg"),
+    ("Germany", "North Rhine-Westphalia","Dusseldorf", 9, "A46 / Rheinkniebrücke"),
+    ("Germany", "Bavaria",          "Nuremberg",  10, "A9 / Frankenschnellweg"),
+    # ── FRANCE ──
+    ("France", "Île-de-France",     "Paris",       1, "Périphérique / A1"),
+    ("France", "Auvergne-Rhône",    "Lyon",        2, "A6 / Périphérique Nord"),
+    ("France", "Provence",          "Marseille",   3, "A7 / Bd Michelet"),
+    ("France", "Occitanie",         "Toulouse",    4, "A620 Périphérique"),
+    ("France", "Nouvelle-Aquitaine","Bordeaux",    5, "A630 / Pont d'Aquitaine"),
+    ("France", "Grand Est",         "Strasbourg",  6, "A35 / A352"),
+    # ── CHINA ──
+    ("China", "Beijing",    "Beijing",       1, "3rd Ring Road / Chang'an Ave"),
+    ("China", "Shanghai",   "Shanghai",      2, "Inner Ring Road / A20"),
+    ("China", "Guangdong",  "Guangzhou",     3, "Inner Ring Expressway"),
+    ("China", "Guangdong",  "Shenzhen",      4, "Shennan Avenue / G4E"),
+    ("China", "Chongqing",  "Chongqing",     5, "Inner Ring / G75"),
+    ("China", "Sichuan",    "Chengdu",       6, "2nd Ring Road"),
+    ("China", "Hubei",      "Wuhan",         7, "2nd Ring Road / G42"),
+    ("China", "Zhejiang",   "Hangzhou",      8, "Yan'an Road / G25"),
+    ("China", "Jiangsu",    "Nanjing",       9, "Nanjing Ring Road"),
+    ("China", "Liaoning",   "Shenyang",     10, "2nd Ring Road / G1"),
+    ("China", "Shaanxi",    "Xi'an",         1, "South 2nd Ring Road"),
+    ("China", "Shandong",   "Jinan",         2, "Jiwei Road / G2"),
+    ("China", "Shandong",   "Qingdao",       3, "Haier Road / G20"),
+    ("China", "Fujian",     "Xiamen",        4, "Xiamen Island Expressway"),
+    ("China", "Tianjin",    "Tianjin",       5, "Zhonghuan Express / G2"),
+    # ── JAPAN ──
+    ("Japan", "Tokyo",      "Tokyo",         1, "Metropolitan Expressway C2"),
+    ("Japan", "Osaka",      "Osaka",         2, "Hanshin Expressway / Route 16"),
+    ("Japan", "Aichi",      "Nagoya",        3, "Meishin / Nagoya Ring Road"),
+    ("Japan", "Hokkaido",   "Sapporo",       4, "Hokkaido Expressway E5"),
+    ("Japan", "Miyagi",     "Sendai",        5, "Sendai Ring Road"),
+    ("Japan", "Fukuoka",    "Fukuoka",       6, "Fukuoka Urban Expressway"),
+    ("Japan", "Hiroshima",  "Hiroshima",     7, "San'yo Expressway"),
+    ("Japan", "Kanagawa",   "Yokohama",      8, "Bay Shore Route / K3"),
+    ("Japan", "Kyoto",      "Kyoto",         9, "Kyoto Bypass / Route 1"),
+    ("Japan", "Okinawa",    "Naha",         10, "Okinawa Expressway"),
+    # ── AUSTRALIA ──
+    ("Australia", "New South Wales","Sydney",      1, "M1 / Harbour Bridge"),
+    ("Australia", "Victoria",       "Melbourne",   2, "M1 / CityLink"),
+    ("Australia", "Queensland",     "Brisbane",    3, "M3 / Pacific Motorway"),
+    ("Australia", "Western Australia","Perth",      4, "Kwinana Freeway / M1"),
+    ("Australia", "South Australia","Adelaide",    5, "South Eastern Freeway"),
+    ("Australia", "Australian Capital Territory","Canberra", 6, "Tuggeranong Pkwy"),
+    ("Australia", "Northern Territory","Darwin",   7, "Stuart Highway"),
+    ("Australia", "Tasmania",       "Hobart",      8, "Southern Outlet / A6"),
+    # ── CANADA ──
+    ("Canada", "Ontario",       "Toronto",     1, "Highway 401 / Gardiner"),
+    ("Canada", "Ontario",       "Ottawa",      2, "Highway 417 / Queensway"),
+    ("Canada", "Quebec",        "Montreal",    3, "Autoroute 40 / Décarie"),
+    ("Canada", "British Columbia","Vancouver",  4, "Trans-Canada Hwy / Granville"),
+    ("Canada", "Alberta",       "Calgary",     5, "Deerfoot Trail / Ring Road"),
+    ("Canada", "Alberta",       "Edmonton",    6, "Anthony Henday Drive"),
+    ("Canada", "Manitoba",      "Winnipeg",    7, "Perimeter Highway"),
+    ("Canada", "Nova Scotia",   "Halifax",     8, "Highway 102 / Bayers Rd"),
+    # ── BRAZIL ──
+    ("Brazil", "São Paulo",     "São Paulo",   1, "Marginal Pinheiros / Rodoanel"),
+    ("Brazil", "Rio de Janeiro","Rio de Janeiro", 2, "Via Dutra / Linha Amarela"),
+    ("Brazil", "Minas Gerais",  "Belo Horizonte", 3, "Anel Rodoviário"),
+    ("Brazil", "Bahia",         "Salvador",    4, "BR-324 / Via Expressa"),
+    ("Brazil", "Ceará",         "Fortaleza",   5, "BR-116 / Via Expressa"),
+    ("Brazil", "Paraná",        "Curitiba",    6, "BR-277 / Linha Verde"),
+    ("Brazil", "Pernambuco",    "Recife",      7, "BR-101 / Via Mangue"),
+    ("Brazil", "Amazonas",      "Manaus",      8, "AM-010 / Via Expressa"),
+    # ── RUSSIA ──
+    ("Russia", "Moscow Oblast", "Moscow",      1, "MKAD / TTK Ring Road"),
+    ("Russia", "Saint Petersburg","Saint Petersburg", 2, "KAD Ring Road"),
+    ("Russia", "Novosibirsk",   "Novosibirsk", 3, "M-52 / Berdsk Highway"),
+    ("Russia", "Yekaterinburg", "Yekaterinburg", 4, "EKAD / Siberian Tract"),
+    ("Russia", "Tatarstan",     "Kazan",       5, "Inner Ring Road"),
+    ("Russia", "Krasnodar",     "Krasnodar",   6, "Platovskiy / KAD"),
+    # ── SOUTH AFRICA ──
+    ("South Africa", "Gauteng",      "Johannesburg", 1, "N1 / N3 Interchange"),
+    ("South Africa", "Gauteng",      "Pretoria",     2, "N1 / N4 Corridor"),
+    ("South Africa", "Western Cape", "Cape Town",    3, "N2 / N1 / De Waal"),
+    ("South Africa", "KwaZulu-Natal","Durban",       4, "N3 / N2 King Shaka"),
+    ("South Africa", "Eastern Cape", "Port Elizabeth",5,"N2 / R10"),
+    # ── NIGERIA ──
+    ("Nigeria", "Lagos",    "Lagos",      1, "Lagos-Ibadan Expressway / 3rd Mainland"),
+    ("Nigeria", "Abuja FCT","Abuja",      2, "Airport Road / Nnamdi Azikiwe"),
+    ("Nigeria", "Kano",     "Kano",       3, "Kano Ring Road"),
+    ("Nigeria", "Rivers",   "Port Harcourt", 4, "East-West Road"),
+    ("Nigeria", "Oyo",      "Ibadan",     5, "Lagos-Ibadan Expressway"),
+    # ── UAE ──
+    ("UAE", "Dubai",        "Dubai",      1, "Sheikh Zayed Road / E11"),
+    ("UAE", "Abu Dhabi",    "Abu Dhabi",  2, "Sheikh Maktoum Road / E10"),
+    ("UAE", "Sharjah",      "Sharjah",    3, "University City Road / E311"),
+    # ── SAUDI ARABIA ──
+    ("Saudi Arabia", "Riyadh",   "Riyadh",     1, "King Fahd Road / Ring Road"),
+    ("Saudi Arabia", "Jeddah",   "Jeddah",     2, "King Abdulaziz Road / Corniche"),
+    ("Saudi Arabia", "Makkah",   "Mecca",      3, "Al-Haram / Mina Road"),
+    ("Saudi Arabia", "Al-Madinah","Medina",    4, "Hijra Road / Quba"),
+    # ── EGYPT ──
+    ("Egypt", "Cairo",      "Cairo",      1, "Ring Road / Corniche el-Nil"),
+    ("Egypt", "Alexandria", "Alexandria", 2, "Alexandria Desert Road"),
+    ("Egypt", "Giza",       "Giza",       3, "Cairo-Alexandria Desert Road"),
+    # ── SOUTH KOREA ──
+    ("South Korea", "Seoul",     "Seoul",     1, "Olympic Expressway / Gangnam"),
+    ("South Korea", "Busan",     "Busan",     2, "Nakdong River Expressway"),
+    ("South Korea", "Incheon",   "Incheon",   3, "Incheon Airport Expressway"),
+    ("South Korea", "Daegu",     "Daegu",     4, "Daegu Ring Road"),
+    ("South Korea", "Gwangju",   "Gwangju",   5, "Beltway / National Route 1"),
+    # ── MEXICO ──
+    ("Mexico", "Mexico City", "Mexico City",  1, "Periférico / Viaducto"),
+    ("Mexico", "Jalisco",     "Guadalajara",  2, "Periférico / López Mateos"),
+    ("Mexico", "Nuevo León",  "Monterrey",    3, "Autopista 85 / Periférico"),
+    ("Mexico", "Puebla",      "Puebla",       4, "ARCO Norte / Blvd Atlixcáyotl"),
+    ("Mexico", "Yucatán",     "Mérida",       5, "Periférico / Paseo de Montejo"),
+    # ── ARGENTINA ──
+    ("Argentina", "Buenos Aires","Buenos Aires", 1, "General Paz / Autopista 25 Mayo"),
+    ("Argentina", "Córdoba",    "Córdoba",      2, "Av. Circunvalación"),
+    ("Argentina", "Rosario",    "Rosario",      3, "Av. de Circunvalación"),
+    # ── INDONESIA ──
+    ("Indonesia", "Jakarta",    "Jakarta",      1, "Tol Dalam Kota / JORR"),
+    ("Indonesia", "West Java",  "Bandung",      2, "Tol Padaleunyi"),
+    ("Indonesia", "East Java",  "Surabaya",     3, "MERR / Tol Waru"),
+    ("Indonesia", "Bali",       "Denpasar",     4, "By Pass Ngurah Rai"),
+    ("Indonesia", "North Sumatra","Medan",       5, "Ring Road / Tol Belmera"),
+    # ── PAKISTAN ──
+    ("Pakistan", "Punjab",      "Lahore",       1, "Ring Road / MM Alam"),
+    ("Pakistan", "Sindh",       "Karachi",      2, "Northern Bypass / Shahrah-e-Faisal"),
+    ("Pakistan", "Islamabad Capital","Islamabad",3, "Islamabad Highway / Expressway"),
+    ("Pakistan", "KPK",         "Peshawar",     4, "GT Road / Ring Road"),
+    # ── BANGLADESH ──
+    ("Bangladesh", "Dhaka",     "Dhaka",        1, "Dhaka Bypass / Mirpur Road"),
+    ("Bangladesh", "Chittagong","Chittagong",   2, "Chittagong Port Road"),
+    # ── SRI LANKA ──
+    ("Sri Lanka", "Western Province","Colombo",  1, "E01 / Baseline Road"),
+    # ── NEPAL ──
+    ("Nepal", "Bagmati",        "Kathmandu",    1, "Ring Road / Araniko Hwy"),
+    # ── IRAN ──
+    ("Iran", "Tehran",          "Tehran",       1, "Chamran Expressway / Ring Road"),
+    ("Iran", "Isfahan",         "Isfahan",      2, "Nahjol-Balaghe Blvd"),
+    ("Iran", "Mashhad",         "Mashhad",      3, "Vakil Abad Blvd"),
+    # ── TURKEY ──
+    ("Turkey", "Istanbul",      "Istanbul",     1, "O-1 / FSM Bridge"),
+    ("Turkey", "Ankara",        "Ankara",       2, "Konya Road / O-4"),
+    ("Turkey", "Izmir",         "Izmir",        3, "İzmir Ring Road / O-32"),
+    # ── ITALY ──
+    ("Italy", "Lazio",          "Rome",         1, "GRA / Via Appia"),
+    ("Italy", "Lombardy",       "Milan",        2, "A51 Tangenziale Est"),
+    ("Italy", "Campania",       "Naples",       3, "Raccordo Campano / A56"),
+    ("Italy", "Veneto",         "Venice",       4, "A4 / Mestre Bypass"),
+    ("Italy", "Tuscany",        "Florence",     5, "A1 / Firenze Sud"),
+    # ── SPAIN ──
+    ("Spain", "Madrid",         "Madrid",       1, "M-30 / A-2"),
+    ("Spain", "Catalonia",      "Barcelona",    2, "B-23 / Ronda de Dalt"),
+    ("Spain", "Valencia",       "Valencia",     3, "V-30 / A-3"),
+    ("Spain", "Andalusia",      "Seville",      4, "SE-30 / A-49"),
+    # ── PORTUGAL ──
+    ("Portugal", "Lisbon",      "Lisbon",       1, "CRIL / A2"),
+    ("Portugal", "Porto",       "Porto",        2, "Via de Cintura Interna"),
+    # ── NETHERLANDS ──
+    ("Netherlands", "North Holland","Amsterdam", 1, "A10 Ring Road"),
+    ("Netherlands", "South Holland","Rotterdam", 2, "A20 / Maas Tunnel"),
+    ("Netherlands", "South Holland","The Hague", 3, "A12 / A13"),
+    # ── BELGIUM ──
+    ("Belgium", "Brussels Capital","Brussels",  1, "R0 Brussels Ring / E19"),
+    ("Belgium", "Flemish Region", "Antwerp",    2, "R1 Ring Road"),
+    # ── SWITZERLAND ──
+    ("Switzerland", "Zurich",   "Zurich",       1, "A1 / A3 / Cityring"),
+    ("Switzerland", "Geneva",   "Geneva",       2, "A1 / Boulevard James-Fazy"),
+    # ── AUSTRIA ──
+    ("Austria", "Vienna",       "Vienna",       1, "A23 / Gürtel Ring"),
+    # ── POLAND ──
+    ("Poland", "Masovian",      "Warsaw",       1, "S2 / S7 Southern Bypass"),
+    ("Poland", "Lesser Poland", "Krakow",       2, "A4 / Krakowska"),
+    # ── SWEDEN ──
+    ("Sweden", "Stockholm",     "Stockholm",    1, "Essingeleden / E4"),
+    ("Sweden", "Västra Götaland","Gothenburg",  2, "E6 / E20"),
+    # ── NORWAY ──
+    ("Norway", "Oslo",          "Oslo",         1, "E18 / Ring 3"),
+    # ── DENMARK ──
+    ("Denmark", "Capital Region","Copenhagen",  1, "Motorring 3 / E20"),
+    # ── FINLAND ──
+    ("Finland", "Uusimaa",      "Helsinki",     1, "Ring III / E18"),
+    # ── CZECH REPUBLIC ──
+    ("Czech Republic","Prague",  "Prague",      1, "D0 City Ring / D1"),
+    # ── HUNGARY ──
+    ("Hungary", "Budapest",     "Budapest",     1, "M0 Ring Road"),
+    # ── ROMANIA ──
+    ("Romania", "Ilfov",        "Bucharest",    1, "DN1 / A3"),
+    # ── UKRAINE ──
+    ("Ukraine", "Kyiv City",    "Kyiv",         1, "Zhytomyr Hwy / Boryspil Hwy"),
+    # ── GREECE ──
+    ("Greece", "Attica",        "Athens",       1, "A6 / Attiki Odos"),
+    # ── ISRAEL ──
+    ("Israel", "Tel Aviv District","Tel Aviv",  1, "Ayalon Highway / Route 1"),
+    # ── SINGAPORE ──
+    ("Singapore", "Singapore",  "Singapore",    1, "PIE / CTE / AYE"),
+    # ── MALAYSIA ──
+    ("Malaysia", "Federal Territory","Kuala Lumpur", 1, "SPRINT / LDP"),
+    ("Malaysia", "Johor",       "Johor Bahru",  2, "E2 / E1 North-South"),
+    # ── THAILAND ──
+    ("Thailand", "Bangkok",     "Bangkok",      1, "Si Rat Expressway / Outer Ring"),
+    ("Thailand", "Chiang Mai",  "Chiang Mai",   2, "Super Highway / Ring Road"),
+    # ── VIETNAM ──
+    ("Vietnam", "Hanoi",        "Hanoi",        1, "Ring Road 3 / National Route 1"),
+    ("Vietnam", "Ho Chi Minh",  "Ho Chi Minh City", 2, "Hanoi Highway / Ring Road 2"),
+    # ── PHILIPPINES ──
+    ("Philippines", "Metro Manila","Manila",    1, "EDSA / C5 Road"),
+    ("Philippines", "Cebu",     "Cebu City",    2, "Mandaue-Mactan / MCTEP"),
+    # ── NEW ZEALAND ──
+    ("New Zealand", "Auckland", "Auckland",     1, "SH1 / Northern Motorway"),
+    ("New Zealand", "Wellington","Wellington",  2, "Mt Victoria Tunnel / SH1"),
+    # ── KENYA ──
+    ("Kenya", "Nairobi",        "Nairobi",      1, "Thika Superhighway / Mombasa Rd"),
+    ("Kenya", "Mombasa",        "Mombasa",      2, "Mombasa-Nairobi Road"),
+    # ── ETHIOPIA ──
+    ("Ethiopia", "Addis Ababa", "Addis Ababa",  1, "Ring Road / Bole Road"),
+    # ── GHANA ──
+    ("Ghana", "Greater Accra",  "Accra",        1, "N1 / Ring Road Central"),
+    # ── TANZANIA ──
+    ("Tanzania", "Dar es Salaam","Dar es Salaam",1,"Morogoro Road / Nelson Mandela"),
+    # ── MOROCCO ──
+    ("Morocco", "Casablanca-Settat","Casablanca",1,"A1 / Bd Mohammed VI"),
+    ("Morocco", "Rabat-Salé",   "Rabat",        2,"A1 / Av Mohammed VI"),
+    # ── ALGERIA ──
+    ("Algeria", "Algiers",      "Algiers",      1,"East-West Highway / Ring Road"),
+    # ── CHILE ──
+    ("Chile", "Santiago Metro", "Santiago",     1,"Autopista Central / Costanera Norte"),
+    # ── COLOMBIA ──
+    ("Colombia", "Bogotá D.C.", "Bogotá",       1,"Calle 80 / Autopista Sur"),
+    ("Colombia", "Antioquia",   "Medellín",     2,"Autopista Norte / Periférico"),
+    # ── PERU ──
+    ("Peru", "Lima Province",   "Lima",         1,"Panamericana Sur / Javier Prado"),
+    # ── VENEZUELA ──
+    ("Venezuela", "Capital District","Caracas",  1,"Autopista Francisco Fajardo"),
+    # ── CUBA ──
+    ("Cuba", "Havana",          "Havana",       1,"Autopista Nacional / Malecón"),
+]
+
+# Build lookup structures
+LOCATION_INDEX = []   # list of dicts for fast search
+for country, state, city, seg, road in WORLD_LOCATIONS:
+    LOCATION_INDEX.append({
+        "country": country,
+        "state":   state,
+        "city":    city,
+        "segment": seg,
+        "road":    road,
+        "label":   f"{city}, {state}, {country}",
+        "search_key": f"{country} {state} {city}".lower(),
+    })
+
+ALL_COUNTRIES = sorted(set(e["country"] for e in LOCATION_INDEX))
+
+def search_locations(query: str):
+    """Return matching location entries for a query string."""
+    q = query.strip().lower()
+    if not q:
+        return LOCATION_INDEX
+    return [e for e in LOCATION_INDEX if q in e["search_key"]]
+
+# Legacy segment label (used for chart titles)
+SEGMENT_LABEL = {
+    1: "Segment 1", 2: "Segment 2", 3: "Segment 3", 4: "Segment 4",
+    5: "Segment 5", 6: "Segment 6", 7: "Segment 7", 8: "Segment 8",
+    9: "Segment 9", 10: "Segment 10",
+}
+
+# ────────────────────────────────────────────────
 # SIDEBAR
 # ────────────────────────────────────────────────
 
@@ -213,11 +568,47 @@ st.sidebar.title("🚦 Traffic Forecasting")
 st.sidebar.markdown("**SDG 11** — Sustainable Cities & Communities")
 st.sidebar.markdown("---")
 
-segment_id = st.sidebar.selectbox(
-    "🛣️ Road Segment",
-    options=list(range(1, 11)),
-    format_func=lambda x: f"Segment {x}",
+# ── World Location Search ──
+city_search = st.sidebar.text_input(
+    "🔍 Search city / country / state",
+    placeholder="e.g. Mumbai, Tokyo, California...",
 )
+
+# Filter locations by search text
+q = city_search.strip().lower()
+if q:
+    matched_locs = [e for e in LOCATION_INDEX if q in e["search_key"]]
+else:
+    matched_locs = LOCATION_INDEX
+
+if not matched_locs:
+    st.sidebar.warning("No locations found. Try a different search.")
+    matched_locs = LOCATION_INDEX[:20]
+
+# Build flat option list: "City — State, Country"
+loc_options = [
+    f"{e['city']} — {e['state']}, {e['country']}"
+    for e in matched_locs
+]
+
+selected_option = st.sidebar.selectbox(
+    "📍 Select Location",
+    options=loc_options,
+)
+
+# Resolve back to location entry
+sel_idx = loc_options.index(selected_option)
+selected_loc = matched_locs[sel_idx]
+segment_id = selected_loc["segment"]
+
+st.sidebar.success(
+    f"📍 **{selected_loc['city']}**  \n"
+    f"{selected_loc['state']}, {selected_loc['country']}  \n"
+    f"🛣️ {selected_loc['road']}  \n"
+    f"📊 Segment {segment_id}"
+)
+
+st.sidebar.markdown("---")
 forecast_horizon = st.sidebar.slider("⏱️ Forecast Horizon (hours)", min_value=1, max_value=4, value=2)
 model_choice = st.sidebar.radio("🤖 Prediction Model", ["Random Forest", "XGBoost"])
 show_heatmap = st.sidebar.checkbox("🗺️ Show Congestion Heatmap", value=True)
@@ -261,7 +652,14 @@ current_speed = round(latest["avg_speed_kmh"], 1)
 current_severity = classify_severity(current_vol)
 current_rain = round(latest["rainfall_mm"], 1)
 
-st.markdown("### 📊 Current Conditions — Segment {seg}".format(seg=segment_id))
+location_label = f"{selected_loc['city']}, {selected_loc['state']}, {selected_loc['country']}"
+road_label = selected_loc['road']
+st.markdown(
+    f"### 📊 Current Conditions — 📍 {selected_loc['city']}"
+    f"&nbsp;&nbsp;<span style='color:#57606a;font-size:0.9rem;'>({selected_loc['state']}, {selected_loc['country']})</span>",
+    unsafe_allow_html=True,
+)
+st.caption(f"🛣️ Key Road/District: **{road_label}** &nbsp;|&nbsp; Traffic data: Segment {segment_id}")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:

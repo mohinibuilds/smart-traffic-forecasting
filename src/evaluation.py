@@ -222,7 +222,10 @@ def generate_folium_heatmap(
 
     os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
     m.save(output_path)
-    print(f"[✓] Folium heatmap saved → '{output_path}'")
+    try:
+        print(f"[✓] Folium heatmap saved → '{output_path}'")
+    except (ValueError, OSError):
+        pass
     return output_path
 
 

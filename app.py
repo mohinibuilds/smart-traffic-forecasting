@@ -1048,21 +1048,23 @@ st.markdown("---")
 if show_heatmap:
     st.markdown("### 🗺️ Network-Wide Congestion Heatmap")
     try:
-        from src.evaluation import generate_folium_heatmap
+        from evaluation import generate_folium_heatmap
         latest_snapshot = (
             df.sort_values("timestamp")
             .groupby("segment_id")
             .last()
             .reset_index()[["segment_id", "vehicle_volume"]]
         )
-        map_path = "assets/traffic_heatmap.html"
-        os.makedirs("assets", exist_ok=True)
+        map_path = os.path.join(_ROOT, "assets", "traffic_heatmap.html")
+        os.makedirs(os.path.join(_ROOT, "assets"), exist_ok=True)
         generate_folium_heatmap(latest_snapshot, output_path=map_path)
         with open(map_path, "r", encoding="utf-8") as f:
             map_html = f.read()
         st.components.v1.html(map_html, height=450)
     except ImportError:
         st.info("Install `folium` to enable the interactive heatmap: `pip install folium`")
+    except Exception as e:
+        st.warning(f"Heatmap could not be generated: {e}")
     st.markdown("---")
 
 # ── RE-ROUTING RECOMMENDATIONS ──

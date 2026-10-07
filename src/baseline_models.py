@@ -1,4 +1,4 @@
-"""
+﻿"""
 Baseline ML Models — XGBoost & Random Forest
 ----------------------------------------------
 Trains, evaluates, and persists tabular ML models for short-term
@@ -65,7 +65,7 @@ def train_random_forest(
     model.fit(X_train, y_train)
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     joblib.dump(model, save_path)
-    print(f"[✓] Random Forest saved → '{save_path}'")
+    print(f"[OK] Random Forest saved → '{save_path}'")
     return model
 
 
@@ -98,7 +98,7 @@ def train_xgboost(
     model.fit(X_train, y_train, eval_set=[(X_train, y_train)], verbose=False)
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     joblib.dump(model, save_path)
-    print(f"[✓] XGBoost saved → '{save_path}'")
+    print(f"[OK] XGBoost saved → '{save_path}'")
     return model
 
 

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Data Preprocessing & Feature Engineering
 ------------------------------------------
 - Loads raw traffic CSV
@@ -32,7 +32,7 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
             df.groupby("segment_id")[col]
             .transform(lambda x: x.interpolate(method="linear", limit_direction="both"))
         )
-    print(f"[✓] Loaded {len(df):,} rows from '{filepath}'")
+    print(f"[OK] Loaded {len(df):,} rows from '{filepath}'")
     return df
 
 
@@ -93,7 +93,7 @@ def add_lag_and_rolling_features(df: pd.DataFrame, target_col: str = "vehicle_vo
     # Drop rows with NaN lags (first 24 h per segment)
     df.dropna(subset=[f"{target_col}_lag24"], inplace=True)
     df.reset_index(drop=True, inplace=True)
-    print(f"[✓] Lag & rolling features added. Shape: {df.shape}")
+    print(f"[OK] Lag & rolling features added. Shape: {df.shape}")
     return df
 
 
@@ -138,11 +138,11 @@ def scale_features(
         scaler = MinMaxScaler()
         X_scaled = scaler.fit_transform(X)
         joblib.dump(scaler, scaler_path)
-        print(f"[✓] Scaler fitted & saved → '{scaler_path}'")
+        print(f"[OK] Scaler fitted & saved → '{scaler_path}'")
     else:
         scaler = joblib.load(scaler_path)
         X_scaled = scaler.transform(X)
-        print(f"[✓] Scaler loaded from '{scaler_path}'")
+        print(f"[OK] Scaler loaded from '{scaler_path}'")
 
     return X_scaled, y, scaler
 

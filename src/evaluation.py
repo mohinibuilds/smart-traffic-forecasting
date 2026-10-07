@@ -1,4 +1,4 @@
-"""
+﻿"""
 Evaluation & Visualization Utilities
 --------------------------------------
 Provides functions to:
@@ -70,7 +70,7 @@ def plot_actual_vs_predicted(
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[✓] Plot saved → '{save_path}'")
+        print(f"[OK] Plot saved → '{save_path}'")
     return fig
 
 
@@ -102,7 +102,7 @@ def plot_training_curves(
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[✓] Training curves saved → '{save_path}'")
+        print(f"[OK] Training curves saved → '{save_path}'")
     return fig
 
 
@@ -127,7 +127,7 @@ def plot_feature_importance(
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[✓] Feature importance chart saved → '{save_path}'")
+        print(f"[OK] Feature importance chart saved → '{save_path}'")
     return fig
 
 
@@ -165,7 +165,7 @@ def plot_severity_distribution(df: pd.DataFrame, save_path: str = None) -> plt.F
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[✓] Severity distribution saved → '{save_path}'")
+        print(f"[OK] Severity distribution saved → '{save_path}'")
     return fig
 
 
@@ -223,7 +223,7 @@ def generate_folium_heatmap(
     os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
     m.save(output_path)
     try:
-        print(f"[✓] Folium heatmap saved → '{output_path}'")
+        print(f"[OK] Folium heatmap saved → '{output_path}'")
     except (ValueError, OSError):
         pass
     return output_path

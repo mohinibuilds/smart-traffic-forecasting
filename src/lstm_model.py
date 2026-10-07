@@ -1,4 +1,4 @@
-"""
+﻿"""
 LSTM Model for Sequential Traffic Forecasting
 -----------------------------------------------
 Builds and trains a Long Short-Term Memory (LSTM) neural network
@@ -55,7 +55,7 @@ def build_sequences(
         y_seq.append(y[i])
     X_seq = np.array(X_seq, dtype=np.float32)
     y_seq = np.array(y_seq, dtype=np.float32)
-    print(f"[✓] Sequences built: X={X_seq.shape}, y={y_seq.shape}")
+    print(f"[OK] Sequences built: X={X_seq.shape}, y={y_seq.shape}")
     return X_seq, y_seq
 
 
@@ -185,7 +185,7 @@ def train_lstm(
     # Save final model
     final_path = os.path.join(save_dir, "lstm_final.keras")
     model.save(final_path)
-    print(f"[✓] LSTM model saved → '{final_path}'")
+    print(f"[OK] LSTM model saved → '{final_path}'")
 
     history_dict = {
         "train_loss": history.history["loss"],

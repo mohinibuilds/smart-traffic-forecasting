@@ -61,15 +61,26 @@ smart_traffic_forecasting/
 pip install -r requirements.txt
 ```
 
-### 2. Train all models (generates data + trains RF, XGBoost, LSTM)
+### 2. Train all models (first time only — generates data + trains RF & XGBoost)
 ```bash
 python src/train_all.py
 ```
+> **Note:** Skip this step if `models/saved/` already contains `.pkl` files.
 
 ### 3. Launch the interactive dashboard
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
 ```
+
+The app opens at **http://localhost:8501** in your browser.
+
+**Default login credentials:**
+| Username | Password |
+|----------|----------|
+| admin    | traffic123 |
+| demo     | demo |
+
+> You can also create your own account from the **Create Account** tab on the login page.
 
 ---
 

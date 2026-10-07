@@ -47,37 +47,294 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Custom CSS ───────────────────────────────────
+# ── Global CSS (login + dashboard) ───────────────
 st.markdown(
     """
     <style>
-    .metric-card {
-        background: #f7f8fa;
-        border: 1px solid #e5e7eb;
+    /* ── Base ── */
+    html, body, [data-testid="stAppViewContainer"] {
+        background: #0f1117;
+        color: #e6edf3;
+        font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    }
+    [data-testid="stSidebar"] {
+        background: #161b22 !important;
+        border-right: 1px solid #30363d;
+    }
+    [data-testid="stHeader"] { background: transparent !important; }
+
+    /* ── Login card ── */
+    .login-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+    .login-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 14px;
+        padding: 48px 52px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        text-align: center;
+    }
+    .login-logo {
+        font-size: 3rem;
+        margin-bottom: 4px;
+    }
+    .login-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e6edf3;
+        margin: 0 0 4px;
+    }
+    .login-subtitle {
+        font-size: 0.85rem;
+        color: #8b949e;
+        margin-bottom: 32px;
+    }
+    .login-error {
+        background: rgba(231,76,60,0.15);
+        border: 1px solid rgba(231,76,60,0.4);
         border-radius: 8px;
-        padding: 16px 20px;
+        padding: 10px 14px;
+        color: #e74c3c;
+        font-size: 0.88rem;
+        margin-bottom: 16px;
+    }
+
+    /* ── Top header bar ── */
+    .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 14px 24px;
+        margin-bottom: 24px;
+    }
+    .top-bar-left { display: flex; align-items: center; gap: 14px; }
+    .top-bar-logo { font-size: 2rem; }
+    .top-bar-title { font-size: 1.25rem; font-weight: 700; color: #e6edf3; margin: 0; }
+    .top-bar-sub   { font-size: 0.78rem; color: #8b949e; margin: 0; }
+    .top-bar-badge {
+        background: #1f6feb;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    /* ── Metric card ── */
+    .metric-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 18px 20px;
         text-align: center;
     }
     .severity-low    { color: #2ecc71; font-weight: 700; font-size: 1.4rem; }
     .severity-medium { color: #f39c12; font-weight: 700; font-size: 1.4rem; }
     .severity-high   { color: #e74c3c; font-weight: 700; font-size: 1.4rem; }
 
-    /* Make the search input box stand out in sidebar */
+    /* ── Streamlit metric overrides ── */
+    [data-testid="stMetric"] {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 14px 18px;
+    }
+    [data-testid="stMetricLabel"] { color: #8b949e !important; font-size: 0.82rem; }
+    [data-testid="stMetricValue"] { color: #e6edf3 !important; font-size: 1.4rem; font-weight: 700; }
+
+    /* ── Sidebar inputs ── */
     section[data-testid="stSidebar"] input[type="text"] {
-        border: 2px solid #3b82d4 !important;
+        background: #0d1117 !important;
+        border: 1px solid #30363d !important;
         border-radius: 6px !important;
-        font-size: 0.95rem !important;
-        padding: 8px 10px !important;
-        background: #ffffff !important;
+        color: #e6edf3 !important;
+        font-size: 0.92rem !important;
     }
     section[data-testid="stSidebar"] input[type="text"]:focus {
-        border-color: #1d4ed8 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,212,0.2) !important;
+        border-color: #1f6feb !important;
+        box-shadow: 0 0 0 3px rgba(31,111,235,0.25) !important;
     }
+
+    /* ── Divider ── */
+    hr { border-color: #30363d !important; }
+
+    /* ── Matplotlib charts — dark bg ── */
+    .stPlotlyChart, .stPyplot { background: transparent !important; }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+# ────────────────────────────────────────────────
+# LOGIN PAGE
+# ────────────────────────────────────────────────
+
+# ── User store backed by a JSON file ──
+import json
+
+_USERS_FILE = os.path.join(_ROOT, "data", "users.json")
+_DEFAULT_USERS = {
+    "admin":   "traffic123",
+    "analyst": "sdg11@2025",
+    "demo":    "demo",
+}
+
+def _load_users() -> dict:
+    """Load users from file, seeding defaults if file doesn't exist."""
+    if os.path.exists(_USERS_FILE):
+        try:
+            with open(_USERS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # File missing or corrupt — create it with defaults
+    os.makedirs(os.path.dirname(_USERS_FILE), exist_ok=True)
+    with open(_USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(_DEFAULT_USERS, f, indent=2)
+    return dict(_DEFAULT_USERS)
+
+def _save_users(db: dict):
+    os.makedirs(os.path.dirname(_USERS_FILE), exist_ok=True)
+    with open(_USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(db, f, indent=2)
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+if "login_user" not in st.session_state:
+    st.session_state.login_user = ""
+
+def _do_login(username: str, password: str):
+    uname = username.strip().lower()
+    db = _load_users()
+    if db.get(uname) == password:
+        st.session_state.authenticated = True
+        st.session_state.login_user = uname
+        st.session_state.pop("login_error", None)
+    else:
+        st.session_state.login_error = "Invalid username or password."
+
+def _do_register(username: str, password: str, confirm: str):
+    uname = username.strip().lower()
+    db = _load_users()
+    if not uname or not password:
+        st.session_state.signup_error = "Username and password cannot be empty."
+    elif uname in db:
+        st.session_state.signup_error = "Username already exists. Please choose another."
+    elif password != confirm:
+        st.session_state.signup_error = "Passwords do not match."
+    elif len(password) < 6:
+        st.session_state.signup_error = "Password must be at least 6 characters."
+    else:
+        db[uname] = password
+        _save_users(db)
+        st.session_state.signup_success = True
+        st.session_state.pop("signup_error", None)
+
+def _do_logout():
+    st.session_state.authenticated = False
+    st.session_state.login_user = ""
+
+if not st.session_state.authenticated:
+    # Hide sidebar on auth screen
+    st.markdown(
+        "<style>section[data-testid='stSidebar']{display:none}</style>",
+        unsafe_allow_html=True,
+    )
+
+    with st.container():
+        _, col, _ = st.columns([1, 1.6, 1])
+        with col:
+            # Logo / brand header
+            st.markdown(
+                """
+                <div style="text-align:center;margin-bottom:8px;">
+                  <div style="font-size:3rem;">🚦</div>
+                  <p style="font-size:1.45rem;font-weight:700;color:#e6edf3;margin:0;">Smart Traffic Forecasting</p>
+                  <p style="font-size:0.82rem;color:#8b949e;margin:0 0 24px;">SDG 11 — Sustainable Cities &amp; Communities</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # ── After successful registration: show sign-in form pre-filled ──
+            if st.session_state.get("signup_success"):
+                new_uname = st.session_state.get("new_username", "")
+                st.success(f"Account **{new_uname}** created successfully! Sign in below.")
+
+                if st.session_state.get("login_error"):
+                    st.error(st.session_state.login_error)
+                    st.session_state.pop("login_error", None)
+
+                si_user = st.text_input("Username", value=new_uname, key="si_user_post")
+                si_pass = st.text_input("Password", placeholder="Enter your password", type="password", key="si_pass_post")
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Sign In", use_container_width=True, type="primary", key="btn_signin_post"):
+                    _do_login(si_user, si_pass)
+                    if st.session_state.authenticated:
+                        st.session_state.signup_success = False
+                        st.session_state.pop("new_username", None)
+                    st.rerun()
+
+                if st.button("Back to Sign In", use_container_width=False, key="btn_back"):
+                    st.session_state.signup_success = False
+                    st.session_state.pop("new_username", None)
+                    st.rerun()
+
+            else:
+                # Normal tab switcher
+                tab_signin, tab_signup = st.tabs(["Sign In", "Create Account"])
+
+                # ── Sign In tab ──
+                with tab_signin:
+                    if st.session_state.get("login_error"):
+                        st.error(st.session_state.login_error)
+                        st.session_state.pop("login_error", None)
+
+                    si_user = st.text_input("Username", placeholder="Enter your username", key="si_user")
+                    si_pass = st.text_input("Password", placeholder="Enter your password", type="password", key="si_pass")
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("Sign In", use_container_width=True, type="primary", key="btn_signin"):
+                        _do_login(si_user, si_pass)
+                        st.rerun()
+
+                    st.markdown(
+                        "<p style='color:#8b949e;font-size:0.76rem;margin-top:12px;text-align:center;'>"
+                        "Demo: <b>admin</b> / <b>traffic123</b></p>",
+                        unsafe_allow_html=True,
+                    )
+
+                # ── Create Account tab ──
+                with tab_signup:
+                    if st.session_state.get("signup_error"):
+                        st.error(st.session_state.signup_error)
+                        st.session_state.pop("signup_error", None)
+
+                    su_user    = st.text_input("Choose a Username", placeholder="e.g. john_doe", key="su_user")
+                    su_pass    = st.text_input("Password", placeholder="Min 6 characters", type="password", key="su_pass")
+                    su_confirm = st.text_input("Confirm Password", placeholder="Re-enter password", type="password", key="su_confirm")
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("Create Account", use_container_width=True, type="primary", key="btn_signup"):
+                        _do_register(su_user, su_pass, su_confirm)
+                        if st.session_state.get("signup_success"):
+                            st.session_state.new_username = su_user.strip().lower()
+                        st.rerun()
+
+                    st.markdown(
+                        "<p style='color:#8b949e;font-size:0.76rem;margin-top:12px;text-align:center;'>"
+                        "Your account is saved for future logins.</p>",
+                        unsafe_allow_html=True,
+                    )
+
+    st.stop()
 
 # ────────────────────────────────────────────────
 # DATA & MODEL CACHING
@@ -113,7 +370,7 @@ def _ensure_models_exist():
             from baseline_models import run_baseline_training
             run_baseline_training(X, y, feature_names=FEATURE_COLS)
 
-        st.success("✅ Models trained! Loading dashboard...")
+        st.success("Models trained! Loading dashboard...")
         st.rerun()
 
 
@@ -568,28 +825,12 @@ st.sidebar.title("🚦 Traffic Forecasting")
 st.sidebar.markdown("**SDG 11** — Sustainable Cities & Communities")
 st.sidebar.markdown("---")
 
-# ── World Location Search ──
-city_search = st.sidebar.text_input(
-    "🔍 Search city / country / state",
-    placeholder="e.g. Mumbai, Tokyo, California...",
-)
-
-# Filter locations by search text
-q = city_search.strip().lower()
-if q:
-    matched_locs = [e for e in LOCATION_INDEX if q in e["search_key"]]
-else:
-    matched_locs = LOCATION_INDEX
-
-if not matched_locs:
-    st.sidebar.warning("No locations found. Try a different search.")
-    matched_locs = LOCATION_INDEX[:20]
-
-# Build flat option list: "City — State, Country"
+# Show all locations directly grouped by country in the selectbox
 loc_options = [
     f"{e['city']} — {e['state']}, {e['country']}"
-    for e in matched_locs
+    for e in LOCATION_INDEX
 ]
+matched_locs = LOCATION_INDEX
 
 selected_option = st.sidebar.selectbox(
     "📍 Select Location",
@@ -619,14 +860,32 @@ st.sidebar.info(
     "1–4 hours into the future based on recent traffic patterns."
 )
 
+# Logout button at the bottom of the sidebar
+st.sidebar.markdown("---")
+if st.sidebar.button("🔒 Logout", use_container_width=True):
+    _do_logout()
+    st.rerun()
+st.sidebar.caption(f"Signed in as **{st.session_state.login_user}**")
+
 # ────────────────────────────────────────────────
 # MAIN
 # ────────────────────────────────────────────────
 
-st.title("🏙️ Smart Urban Traffic Congestion & Resource Demand Forecasting")
+# ── Branded top header bar ──
 st.markdown(
-    "> **SDG 11.2** — Provide access to safe, affordable, accessible and sustainable transport systems. "
-    "Reduce congestion, emissions, and improve urban mobility through data-driven forecasting."
+    f"""
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span class="top-bar-logo">🚦</span>
+        <div>
+          <p class="top-bar-title">Smart Urban Traffic Forecasting</p>
+          <p class="top-bar-sub">SDG 11 — Sustainable Cities &amp; Communities</p>
+        </div>
+      </div>
+      <span class="top-bar-badge">Live Dashboard</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 # ── Auto-train on first cloud run if models missing ──
@@ -708,7 +967,9 @@ else:
     st.markdown("")
 
     # Forecast bar chart
-    fig_f, ax_f = plt.subplots(figsize=(8, 3))
+    plt.style.use("dark_background")
+    fig_f, ax_f = plt.subplots(figsize=(8, 3), facecolor="#161b22")
+    ax_f.set_facecolor("#0f1117")
     colors_f = [
         "#2ecc71" if s == "Low" else "#f39c12" if s == "Medium" else "#e74c3c"
         for s in forecast_df["severity"]
@@ -720,11 +981,14 @@ else:
         edgecolor="none",
         width=0.5,
     )
-    ax_f.axhline(current_vol, color="#3b82d4", linestyle="--", linewidth=1.2, label="Current volume")
-    ax_f.set_ylabel("Predicted Vehicle Volume")
-    ax_f.set_title(f"Forecast — Segment {segment_id} ({model_choice})")
-    ax_f.legend()
-    ax_f.grid(axis="y", linestyle="--", alpha=0.4)
+    ax_f.axhline(current_vol, color="#58a6ff", linestyle="--", linewidth=1.2, label="Current volume")
+    ax_f.set_ylabel("Predicted Vehicle Volume", color="#8b949e")
+    ax_f.set_title(f"Forecast — Segment {segment_id} ({model_choice})", color="#e6edf3")
+    ax_f.tick_params(colors="#8b949e")
+    ax_f.legend(facecolor="#161b22", edgecolor="#30363d", labelcolor="#e6edf3")
+    ax_f.grid(axis="y", linestyle="--", alpha=0.25, color="#30363d")
+    for spine in ax_f.spines.values():
+        spine.set_edgecolor("#30363d")
     fig_f.tight_layout()
     st.pyplot(fig_f, use_container_width=True)
     plt.close(fig_f)
@@ -735,12 +999,16 @@ st.markdown("---")
 st.markdown("### 📈 Historical Traffic Volume (Last 7 Days)")
 last_7d = df_seg[df_seg["timestamp"] >= df_seg["timestamp"].max() - pd.Timedelta(days=7)]
 
-fig_h, ax_h = plt.subplots(figsize=(12, 3.5))
-ax_h.plot(last_7d["timestamp"], last_7d["vehicle_volume"], color="#2c3e50", linewidth=1.2, alpha=0.85)
-ax_h.fill_between(last_7d["timestamp"], last_7d["vehicle_volume"], alpha=0.08, color="#3b82d4")
-ax_h.set_ylabel("Vehicle Volume (veh/hr)")
-ax_h.set_title(f"Segment {segment_id} — Last 7 Days")
-ax_h.grid(True, linestyle="--", alpha=0.4)
+fig_h, ax_h = plt.subplots(figsize=(12, 3.5), facecolor="#161b22")
+ax_h.set_facecolor("#0f1117")
+ax_h.plot(last_7d["timestamp"], last_7d["vehicle_volume"], color="#58a6ff", linewidth=1.4, alpha=0.9)
+ax_h.fill_between(last_7d["timestamp"], last_7d["vehicle_volume"], alpha=0.12, color="#58a6ff")
+ax_h.set_ylabel("Vehicle Volume (veh/hr)", color="#8b949e")
+ax_h.set_title(f"Segment {segment_id} — Last 7 Days", color="#e6edf3")
+ax_h.tick_params(colors="#8b949e")
+ax_h.grid(True, linestyle="--", alpha=0.2, color="#30363d")
+for spine in ax_h.spines.values():
+    spine.set_edgecolor("#30363d")
 fig_h.autofmt_xdate()
 fig_h.tight_layout()
 st.pyplot(fig_h, use_container_width=True)
@@ -752,20 +1020,24 @@ st.markdown("---")
 st.markdown("### 🕐 Average Volume by Hour of Day")
 hourly_avg = df_seg.groupby("hour")["vehicle_volume"].mean().reset_index()
 
-fig_p, ax_p = plt.subplots(figsize=(10, 3))
+fig_p, ax_p = plt.subplots(figsize=(10, 3), facecolor="#161b22")
+ax_p.set_facecolor("#0f1117")
 bars = ax_p.bar(hourly_avg["hour"], hourly_avg["vehicle_volume"], edgecolor="none", width=0.7)
 # Colour peaks
 for bar, h in zip(bars, hourly_avg["hour"]):
     if h in [7, 8, 9, 17, 18, 19]:
         bar.set_color("#e74c3c")
     else:
-        bar.set_color("#3b82d4")
+        bar.set_color("#1f6feb")
 
-ax_p.set_xlabel("Hour of Day")
-ax_p.set_ylabel("Avg Vehicle Volume")
-ax_p.set_title(f"Segment {segment_id} — Hourly Traffic Profile (🔴 = peak hours)")
+ax_p.set_xlabel("Hour of Day", color="#8b949e")
+ax_p.set_ylabel("Avg Vehicle Volume", color="#8b949e")
+ax_p.set_title(f"Segment {segment_id} — Hourly Traffic Profile (red = peak hours)", color="#e6edf3")
 ax_p.set_xticks(range(24))
-ax_p.grid(axis="y", linestyle="--", alpha=0.4)
+ax_p.tick_params(colors="#8b949e")
+ax_p.grid(axis="y", linestyle="--", alpha=0.2, color="#30363d")
+for spine in ax_p.spines.values():
+    spine.set_edgecolor("#30363d")
 fig_p.tight_layout()
 st.pyplot(fig_p, use_container_width=True)
 plt.close(fig_p)

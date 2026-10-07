@@ -1,4 +1,4 @@
-"""
+﻿"""
 Synthetic Traffic Dataset Generator
 ------------------------------------
 Generates realistic spatial-temporal traffic data for model training and testing.
@@ -113,7 +113,7 @@ def generate_traffic_dataset(
 
     df = pd.DataFrame(records)
     df.to_csv(output_path, index=False)
-    print(f"[✓] Dataset generated: {len(df):,} rows → saved to '{output_path}'")
+    print(f"[OK] Dataset generated: {len(df):,} rows → saved to '{output_path}'")
     return df
 
 

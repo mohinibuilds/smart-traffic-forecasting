@@ -1,4 +1,4 @@
-"""
+﻿"""
 Training Orchestrator
 ----------------------
 End-to-end script that:
@@ -84,7 +84,7 @@ def main():
     from evaluation import print_metrics_table
     print_metrics_table(results)
 
-    print("\n[✓] Training complete. Launch the dashboard with:")
+    print("\n[OK] Training complete. Launch the dashboard with:")
     print("      python -m streamlit run app.py\n")
 
 

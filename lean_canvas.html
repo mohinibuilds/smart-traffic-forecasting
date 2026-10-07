@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lean Canvas — Smart Traffic Forecasting</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #f0f2f5;
+    padding: 20px 12px;
+    font-size: 13px;
+    color: #1f2328;
+  }
+  .wrapper { max-width: 900px; margin: 0 auto; }
+  .header {
+    background: #1a3a5c; color: #fff;
+    border-radius: 10px 10px 0 0;
+    padding: 14px 20px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+  }
+  .header h1 { font-size: 1.05rem; font-weight: 800; }
+  .header h1 span { color: #60a5fa; }
+  .sdg-badge { background: #f59e0b; color: #1f2328; font-size: 0.7rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; }
+  .canvas { border: 2px solid #1a3a5c; background: #fff; display: grid; grid-template-columns: 1fr 1fr 1.4fr 1fr 1fr; }
+  .cell { border: 1.5px solid #1a3a5c; padding: 10px 12px; min-height: 130px; position: relative; }
+  .cell.span-row-2 { grid-row: span 2; min-height: 260px; }
+  .cell-title { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em; color: #1a3a5c; margin-bottom: 2px; }
+  .cell-sub { font-size: 0.6rem; color: #64748b; margin-bottom: 7px; font-style: italic; }
+  .num { position: absolute; bottom: 6px; right: 10px; font-size: 2.8rem; font-weight: 900; color: #dbeafe; line-height: 1; }
+  ul.lc { list-style: none; padding: 0; }
+  ul.lc li { font-size: 0.78rem; padding: 2px 0 2px 13px; position: relative; color: #1e293b; line-height: 1.4; }
+  ul.lc li::before { content: "▸"; position: absolute; left: 0; color: #3b82f6; font-size: 0.65rem; top: 4px; }
+  .highlight { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; font-weight: 600; color: #1d4ed8; margin-bottom: 6px; line-height: 1.35; }
+  .mrow { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .mpill { background: #1a3a5c; color: #e0f2fe; font-size: 0.62rem; font-weight: 700; padding: 2px 6px; border-radius: 8px; }
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid #1a3a5c; }
+  .bottom-cell { border: 1.5px solid #1a3a5c; padding: 10px 14px; min-height: 110px; position: relative; }
+  .footer { background: #1a3a5c; color: #93c5fd; text-align: center; font-size: 0.68rem; padding: 9px 16px; border-radius: 0 0 10px 10px; }
+  .concept { background: #fff; border: 1.5px solid #d1d5db; border-radius: 8px; padding: 16px 20px; margin-top: 16px; }
+  .concept h2 { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #1a3a5c; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-bottom: 10px; }
+  .concept p { font-size: 0.82rem; color: #334155; margin-bottom: 8px; line-height: 1.6; }
+  .print-btn { display: block; margin: 16px auto 0; background: #1a3a5c; color: #fff; border: none; padding: 10px 32px; font-size: 0.9rem; font-weight: 700; border-radius: 7px; cursor: pointer; }
+  @media print { .print-btn { display: none; } body { background: #fff; padding: 0; } }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <h1>🚦 Smart Urban Traffic Congestion &amp; <span>Resource Demand Forecasting System</span></h1>
+    <div class="sdg-badge">🏙️ SDG 11 — Sustainable Cities</div>
+  </div>
+
+  <div class="canvas">
+
+    <!-- 1. PROBLEM -->
+    <div class="cell span-row-2">
+      <div class="cell-title">1. Problem</div>
+      <div class="cell-sub">Top 3 problems</div>
+      <ul class="lc">
+        <li>Urban traffic congestion wastes millions of hours — no early warning system exists for controllers</li>
+        <li>Reactive traffic management causes gridlocks, accidents &amp; fuel waste</li>
+        <li>Excessive vehicle idling increases CO₂ &amp; NOₓ emissions harming air quality</li>
+      </ul>
+      <div class="num">1</div>
+    </div>
+
+    <!-- 4. SOLUTION -->
+    <div class="cell">
+      <div class="cell-title">4. Solution</div>
+      <div class="cell-sub">Top 3 features</div>
+      <ul class="lc">
+        <li>ML model predicts traffic volume <strong>2–4 hours in advance</strong></li>
+        <li>Auto-classifies severity: 🟢 Low / 🟡 Medium / 🔴 High</li>
+        <li>Recommends real-time re-routing &amp; signal control strategies</li>
+      </ul>
+      <div class="num">4</div>
+    </div>
+
+    <!-- 3. UVP -->
+    <div class="cell span-row-2">
+      <div class="cell-title">3. Unique Value Proposition</div>
+      <div class="cell-sub">Single, clear, compelling message</div>
+      <div class="highlight">"The only open-source ML-powered traffic system that gives authorities a 2–4 hour advance congestion warning — enabling proactive action before gridlock occurs."</div>
+      <ul class="lc">
+        <li>96.7% accurate predictions (R² = 0.9670)</li>
+        <li>Works on 10 road segments simultaneously</li>
+        <li>Zero cost — fully open source &amp; Python-based</li>
+        <li>Directly supports UN SDG 11 &amp; SDG 13</li>
+      </ul>
+      <div class="num">3</div>
+    </div>
+
+    <!-- 5. UNFAIR ADVANTAGE -->
+    <div class="cell">
+      <div class="cell-title">5. Unfair Advantage</div>
+      <div class="cell-sub">Can't be easily copied or bought</div>
+      <ul class="lc">
+        <li>End-to-end ML pipeline from raw data to dashboard</li>
+        <li>Dual-model system (RF + XGBoost) R²=0.9670</li>
+        <li>LSTM architecture ready for deep learning</li>
+        <li>SDG-aligned — eligible for govt &amp; UN funding</li>
+      </ul>
+      <div class="num">5</div>
+    </div>
+
+    <!-- 2. CUSTOMER SEGMENTS -->
+    <div class="cell span-row-2">
+      <div class="cell-title">2. Customer Segments</div>
+      <div class="cell-sub">Target customers</div>
+      <ul class="lc">
+        <li><strong>Municipal Traffic Authorities</strong></li>
+        <li><strong>Smart City Projects</strong></li>
+        <li><strong>State Transport Departments</strong></li>
+        <li><strong>Navigation Apps</strong> (Waze, Google Maps)</li>
+        <li><strong>Urban Planners &amp; Researchers</strong></li>
+      </ul>
+      <div class="num">2</div>
+    </div>
+
+    <!-- 8. KEY METRICS -->
+    <div class="cell">
+      <div class="cell-title">8. Key Metrics</div>
+      <div class="cell-sub">Key activities you measure</div>
+      <ul class="lc">
+        <li>R² Score: <strong>0.9670</strong></li>
+        <li>MAE: <strong>134 vehicles/hr</strong></li>
+        <li>RMSE: <strong>184 vehicles/hr</strong></li>
+        <li>Training data: <strong>87,600 rows</strong></li>
+      </ul>
+      <div class="mrow">
+        <span class="mpill">10 Segments</span>
+        <span class="mpill">365 Days</span>
+        <span class="mpill">20 Features</span>
+      </div>
+      <div class="num">8</div>
+    </div>
+
+    <!-- 9. CHANNELS -->
+    <div class="cell">
+      <div class="cell-title">9. Channels</div>
+      <div class="cell-sub">Path to customers</div>
+      <ul class="lc">
+        <li>Streamlit Dashboard — live web interface</li>
+        <li>GitHub — open source deployment</li>
+        <li>REST API — city system integration</li>
+        <li>Smart City Expos — B2G outreach</li>
+      </ul>
+      <div class="num">9</div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
+    <div class="bottom-cell">
+      <div class="cell-title">7. Cost Structure</div>
+      <div class="cell-sub">Development · Hosting · People</div>
+      <ul class="lc">
+        <li>Development: Python open-source (₹0)</li>
+        <li>Hosting: Streamlit Cloud free tier</li>
+        <li>Cloud GPU for LSTM: ~₹1,000–2,000/run</li>
+        <li>People: 1 ML engineer (intern level)</li>
+      </ul>
+      <div class="num" style="color:#fef3c7;">7</div>
+    </div>
+    <div class="bottom-cell">
+      <div class="cell-title">6. Revenue Streams</div>
+      <div class="cell-sub">Revenue Model · Lifetime Value · Gross Margin</div>
+      <ul class="lc">
+        <li>SaaS License: ₹50K–2L/year per municipality</li>
+        <li>Govt Grants: Smart City Mission / SDG funding</li>
+        <li>API Access: Navigation apps pay per call</li>
+        <li>Gross Margin: ~85% (software product)</li>
+      </ul>
+      <div class="num" style="color:#fef3c7;">6</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    🔗 github.com/mohinibuilds/smart-traffic-forecasting &nbsp;|&nbsp; SDG 11 — Sustainable Cities &amp; Communities &nbsp;|&nbsp; Developer: Mohini (@mohinibuilds)
+  </div>
+
+  <!-- CONCEPT NOTE -->
+  <div class="concept">
+    <h2>📄 Concept Note — Smart Urban Traffic Forecasting System</h2>
+    <p><strong>Project Title:</strong> Smart Urban Traffic Congestion &amp; Resource Demand Forecasting System</p>
+    <p><strong>SDG Alignment:</strong> Goal 11 — Sustainable Cities and Communities (Target 11.2 — Safe &amp; Sustainable Transport)</p>
+    <p><strong>Problem:</strong> Rapid urbanization has led to severe traffic congestion in Indian and global cities. Municipal authorities currently operate reactively — they respond to gridlocks only after they occur. There is no proactive, data-driven system to predict and prevent congestion before it happens. This results in wasted fuel, increased CO₂ emissions, delayed emergency vehicles, and poor quality of urban life.</p>
+    <p><strong>Solution:</strong> This project builds a Machine Learning-powered Traffic Forecasting System that analyzes historical traffic patterns, weather data, and time-based features to predict vehicle volume 2–4 hours in advance. The system classifies congestion severity as Low, Medium, or High and provides automated re-routing recommendations through an interactive Streamlit dashboard.</p>
+    <p><strong>Technology:</strong> Python with XGBoost and Random Forest achieving R²=0.9670, engineered features including lag values, rolling statistics, and cyclical time encoding, visualized through Folium heatmap and Streamlit dashboard. LSTM neural network architecture also designed for deep sequential learning.</p>
+    <p><strong>Impact:</strong> Municipal traffic authorities receive actionable alerts before congestion peaks — enabling proactive signal timing, route diversions, and resource pre-positioning. Directly reduces vehicular idling, lowers greenhouse gas emissions, and supports SDG 11.2.</p>
+    <p><strong>GitHub:</strong> <span style="color:#1d4ed8; font-weight:700;">https://github.com/mohinibuilds/smart-traffic-forecasting</span></p>
+  </div>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Save as PDF (Ctrl+P)</button>
+
+</div>
+</body>
+</html>

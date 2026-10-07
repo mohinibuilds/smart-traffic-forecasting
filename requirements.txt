@@ -7,3 +7,4 @@ matplotlib
 seaborn
 folium
 joblib
+tensorflow-cpu

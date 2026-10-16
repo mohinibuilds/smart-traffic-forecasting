@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 def generate_traffic_dataset(
     n_segments: int = 10,
-    days: int = 365,
+    days: int = 90,
     seed: int = 42,
     output_path: str = "data/raw/traffic_data.csv",
 ) -> pd.DataFrame:

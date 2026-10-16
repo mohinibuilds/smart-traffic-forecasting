@@ -412,7 +412,7 @@ def load_data():
     if not os.path.exists(DATA_PATH):
         from data_generator import generate_traffic_dataset
         os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
-        generate_traffic_dataset(output_path=DATA_PATH)
+        generate_traffic_dataset(output_path=DATA_PATH, days=90)
 
     df = load_and_clean(DATA_PATH)
     df = encode_cyclical(df)

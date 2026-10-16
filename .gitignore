@@ -6,13 +6,9 @@ __pycache__/
 venv/
 .venv/
 
-# Trained model files (too large for GitHub — auto-generated on first run)
-models/saved/*.pkl
+# Large model files (LSTM only - not used in dashboard)
 models/saved/*.keras
 models/saved/*.h5
-
-# Generated data (auto-generated on first run)
-data/raw/traffic_data.csv
 
 # Streamlit
 .streamlit/secrets.toml

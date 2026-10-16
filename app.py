@@ -340,6 +340,10 @@ if not st.session_state.authenticated:
 
     st.stop()
 
+# ── Hard gate — nothing below runs until the user is authenticated ──
+if not st.session_state.authenticated:
+    st.stop()
+
 # ────────────────────────────────────────────────
 # DATA & MODEL CACHING
 # ────────────────────────────────────────────────

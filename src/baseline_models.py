@@ -1,5 +1,5 @@
-﻿"""
-Baseline ML Models — XGBoost & Random Forest
+"""
+Baseline ML Models � XGBoost & Random Forest
 ----------------------------------------------
 Trains, evaluates, and persists tabular ML models for short-term
 traffic volume forecasting.
@@ -21,30 +21,30 @@ except ImportError:
     print("[!] XGBoost not installed. Only RandomForest will be available.")
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # EVALUATION HELPER
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def evaluate(y_true: np.ndarray, y_pred: np.ndarray, model_name: str = "Model") -> dict:
-    """Compute and display MAE, RMSE, R² metrics."""
+    """Compute and display MAE, RMSE, R� metrics."""
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     r2 = r2_score(y_true, y_pred)
     metrics = {"model": model_name, "MAE": mae, "RMSE": rmse, "R2": r2}
     print(
-        f"\n{'─'*40}\n"
+        f"\n{'-'*40}\n"
         f"  {model_name} Results\n"
-        f"{'─'*40}\n"
+        f"{'-'*40}\n"
         f"  MAE  : {mae:.2f} vehicles\n"
         f"  RMSE : {rmse:.2f} vehicles\n"
-        f"  R²   : {r2:.4f}\n"
+        f"  R�   : {r2:.4f}\n"
     )
     return metrics
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # RANDOM FOREST
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def train_random_forest(
     X_train: np.ndarray,
@@ -65,13 +65,13 @@ def train_random_forest(
     model.fit(X_train, y_train)
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     joblib.dump(model, save_path)
-    print(f"[OK] Random Forest saved → '{save_path}'")
+    print(f"[OK] Random Forest saved -> '{save_path}'")
     return model
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # XGBOOST
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def train_xgboost(
     X_train: np.ndarray,
@@ -98,13 +98,13 @@ def train_xgboost(
     model.fit(X_train, y_train, eval_set=[(X_train, y_train)], verbose=False)
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     joblib.dump(model, save_path)
-    print(f"[OK] XGBoost saved → '{save_path}'")
+    print(f"[OK] XGBoost saved -> '{save_path}'")
     return model
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # FEATURE IMPORTANCE
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def get_feature_importance(model, feature_names: list) -> pd.DataFrame:
     """Return a sorted DataFrame of feature importances."""
@@ -115,9 +115,9 @@ def get_feature_importance(model, feature_names: list) -> pd.DataFrame:
     return df
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # TRAIN & EVALUATE PIPELINE
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def run_baseline_training(
     X: np.ndarray,

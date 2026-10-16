@@ -1,58 +1,57 @@
-"""
-Take screenshots of the Streamlit app using Playwright.
-Run: python take_screenshots.py
-"""
-import asyncio
-import os
-from playwright.async_api import async_playwright
+from playwright.sync_api import sync_playwright
+import os, time
 
-SCREENSHOTS_DIR = os.path.join(os.path.dirname(__file__), "assets", "screenshots")
-os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+os.makedirs('screenshots', exist_ok=True)
 
-async def take_screenshots():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page(viewport={"width": 1400, "height": 900})
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    page = browser.new_page(viewport={'width': 1280, 'height': 800})
 
-        print("Opening Streamlit app...")
-        await page.goto("http://localhost:8501", wait_until="networkidle", timeout=30000)
-        await page.wait_for_timeout(4000)
+    # 1. Login page
+    page.goto('http://localhost:8503', wait_until='networkidle', timeout=15000)
+    time.sleep(2)
+    page.screenshot(path='screenshots/01_login_page.png', full_page=False)
+    print('Screenshot 1: Login page')
 
-        # Screenshot 1: Full dashboard top (header + KPIs)
-        await page.screenshot(
-            path=os.path.join(SCREENSHOTS_DIR, "01_dashboard_overview.png"),
-            full_page=False
-        )
-        print("Screenshot 1: Dashboard overview saved")
+    # 2. Create Account tab
+    page.locator('text=Create Account').first.click()
+    time.sleep(1)
+    page.screenshot(path='screenshots/02_create_account.png', full_page=False)
+    print('Screenshot 2: Create Account')
 
-        # Screenshot 2: Scroll down — forecast section
-        await page.evaluate("window.scrollTo(0, 600)")
-        await page.wait_for_timeout(1500)
-        await page.screenshot(
-            path=os.path.join(SCREENSHOTS_DIR, "02_forecast_section.png"),
-            full_page=False
-        )
-        print("Screenshot 2: Forecast section saved")
+    # 3. Sign in
+    page.locator('text=Sign In').first.click()
+    time.sleep(0.5)
+    page.get_by_placeholder('Enter your username').fill('admin')
+    page.get_by_placeholder('Enter your password').fill('traffic123')
+    page.screenshot(path='screenshots/03_signin_filled.png', full_page=False)
+    print('Screenshot 3: Sign In filled')
 
-        # Screenshot 3: Scroll down more — charts
-        await page.evaluate("window.scrollTo(0, 1400)")
-        await page.wait_for_timeout(1500)
-        await page.screenshot(
-            path=os.path.join(SCREENSHOTS_DIR, "03_charts_section.png"),
-            full_page=False
-        )
-        print("Screenshot 3: Charts section saved")
+    page.get_by_role('button', name='Sign In').click()
+    page.wait_for_load_state('networkidle', timeout=20000)
+    time.sleep(4)
 
-        # Screenshot 4: Full page screenshot
-        await page.evaluate("window.scrollTo(0, 0)")
-        await page.wait_for_timeout(1000)
-        await page.screenshot(
-            path=os.path.join(SCREENSHOTS_DIR, "04_full_page.png"),
-            full_page=True
-        )
-        print("Screenshot 4: Full page saved")
+    # 4. Dashboard top
+    page.screenshot(path='screenshots/04_dashboard_top.png', full_page=False)
+    print('Screenshot 4: Dashboard top')
 
-        await browser.close()
-        print(f"\nAll screenshots saved to: {SCREENSHOTS_DIR}")
+    # 5. Forecast chart
+    page.evaluate('window.scrollTo(0, 600)')
+    time.sleep(1)
+    page.screenshot(path='screenshots/05_forecast_chart.png', full_page=False)
+    print('Screenshot 5: Forecast chart')
 
-asyncio.run(take_screenshots())
+    # 6. Historical trend
+    page.evaluate('window.scrollTo(0, 1200)')
+    time.sleep(1)
+    page.screenshot(path='screenshots/06_historical_trend.png', full_page=False)
+    print('Screenshot 6: Historical trend')
+
+    # 7. Heatmap section
+    page.evaluate('window.scrollTo(0, 2000)')
+    time.sleep(1)
+    page.screenshot(path='screenshots/07_heatmap.png', full_page=False)
+    print('Screenshot 7: Heatmap')
+
+    browser.close()
+    print('All screenshots saved to screenshots/')

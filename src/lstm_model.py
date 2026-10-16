@@ -1,4 +1,4 @@
-﻿"""
+"""
 LSTM Model for Sequential Traffic Forecasting
 -----------------------------------------------
 Builds and trains a Long Short-Term Memory (LSTM) neural network
@@ -22,9 +22,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # SEQUENCE BUILDER
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 LOOKBACK = 24  # Use last 24 hours as input sequence
 
@@ -59,9 +59,9 @@ def build_sequences(
     return X_seq, y_seq
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # MODEL ARCHITECTURE
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def build_lstm_model(
     lookback: int,
@@ -75,9 +75,9 @@ def build_lstm_model(
     Stacked LSTM with Batch Normalisation and Dropout regularisation.
 
     Architecture:
-      LSTM(128) → BN → Dropout
-      LSTM(64)  → BN → Dropout
-      Dense(32) → Dense(1)
+      LSTM(128) -> BN -> Dropout
+      LSTM(64)  -> BN -> Dropout
+      Dense(32) -> Dense(1)
     """
     model = Sequential(
         [
@@ -101,9 +101,9 @@ def build_lstm_model(
     return model
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # TRAINING
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def train_lstm(
     X: np.ndarray,
@@ -167,25 +167,25 @@ def train_lstm(
         verbose=1,
     )
 
-    # ── Evaluation on held-out test set ──
+    # -- Evaluation on held-out test set --
     y_pred = model.predict(X_test, verbose=0).flatten()
     mae = mean_absolute_error(y_test, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     r2 = r2_score(y_test, y_pred)
 
     print(
-        f"\n{'─'*40}\n"
+        f"\n{'-'*40}\n"
         f"  LSTM Test Results\n"
-        f"{'─'*40}\n"
+        f"{'-'*40}\n"
         f"  MAE  : {mae:.2f} vehicles\n"
         f"  RMSE : {rmse:.2f} vehicles\n"
-        f"  R²   : {r2:.4f}\n"
+        f"  R�   : {r2:.4f}\n"
     )
 
     # Save final model
     final_path = os.path.join(save_dir, "lstm_final.keras")
     model.save(final_path)
-    print(f"[OK] LSTM model saved → '{final_path}'")
+    print(f"[OK] LSTM model saved -> '{final_path}'")
 
     history_dict = {
         "train_loss": history.history["loss"],
@@ -201,9 +201,9 @@ def train_lstm(
     return model, history_dict
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # INFERENCE HELPER
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def predict_lstm(
     model_path: str,

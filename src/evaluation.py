@@ -1,4 +1,4 @@
-﻿"""
+"""
 Evaluation & Visualization Utilities
 --------------------------------------
 Provides functions to:
@@ -28,9 +28,9 @@ plt.rcParams.update({"figure.dpi": 120, "font.size": 11})
 PALETTE = {"Low": "#2ecc71", "Medium": "#f39c12", "High": "#e74c3c"}
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 1. ACTUAL vs PREDICTED
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def plot_actual_vs_predicted(
     y_true: np.ndarray,
@@ -42,18 +42,18 @@ def plot_actual_vs_predicted(
     """Plot actual vs. predicted traffic volume over time (first n_points)."""
     fig, axes = plt.subplots(1, 2, figsize=(14, 4))
 
-    # ── Time series comparison ──
+    # -- Time series comparison --
     ax = axes[0]
     x = np.arange(min(n_points, len(y_true)))
     ax.plot(x, y_true[:n_points], label="Actual", color="#2c3e50", linewidth=1.2, alpha=0.85)
     ax.plot(x, y_pred[:n_points], label="Predicted", color="#3b82d4", linewidth=1.2, linestyle="--")
-    ax.set_title(f"{model_name} — Actual vs. Predicted")
+    ax.set_title(f"{model_name} � Actual vs. Predicted")
     ax.set_xlabel("Time Step (hours)")
     ax.set_ylabel("Vehicle Volume")
     ax.legend()
     ax.grid(True, linestyle="--", alpha=0.4)
 
-    # ── Scatter plot ──
+    # -- Scatter plot --
     ax2 = axes[1]
     ax2.scatter(y_true[:n_points], y_pred[:n_points], alpha=0.3, s=15, color="#3b82d4")
     lim = [min(y_true.min(), y_pred.min()) * 0.95, max(y_true.max(), y_pred.max()) * 1.05]
@@ -62,7 +62,7 @@ def plot_actual_vs_predicted(
     ax2.set_ylim(lim)
     ax2.set_xlabel("Actual Volume")
     ax2.set_ylabel("Predicted Volume")
-    ax2.set_title(f"{model_name} — Prediction Scatter")
+    ax2.set_title(f"{model_name} � Prediction Scatter")
     ax2.legend()
     ax2.grid(True, linestyle="--", alpha=0.4)
 
@@ -70,13 +70,13 @@ def plot_actual_vs_predicted(
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[OK] Plot saved → '{save_path}'")
+        print(f"[OK] Plot saved -> '{save_path}'")
     return fig
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 2. LSTM TRAINING CURVES
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def plot_training_curves(
     history_dict: dict,
@@ -94,7 +94,7 @@ def plot_training_curves(
         ax.plot(history_dict[metric[1]], label="Validation", color="#e74c3c", linestyle="--")
         ax.set_xlabel("Epoch")
         ax.set_ylabel(label)
-        ax.set_title(f"LSTM Training — {label}")
+        ax.set_title(f"LSTM Training � {label}")
         ax.legend()
         ax.grid(True, linestyle="--", alpha=0.4)
 
@@ -102,13 +102,13 @@ def plot_training_curves(
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[OK] Training curves saved → '{save_path}'")
+        print(f"[OK] Training curves saved -> '{save_path}'")
     return fig
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 3. FEATURE IMPORTANCE BAR CHART
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def plot_feature_importance(
     importance_df: pd.DataFrame,
@@ -127,13 +127,13 @@ def plot_feature_importance(
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[OK] Feature importance chart saved → '{save_path}'")
+        print(f"[OK] Feature importance chart saved -> '{save_path}'")
     return fig
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 4. CONGESTION SEVERITY DISTRIBUTION
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def plot_severity_distribution(df: pd.DataFrame, save_path: str = None) -> plt.Figure:
     """Pie + bar chart of congestion severity class distribution."""
@@ -165,13 +165,13 @@ def plot_severity_distribution(df: pd.DataFrame, save_path: str = None) -> plt.F
     if save_path:
         os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight")
-        print(f"[OK] Severity distribution saved → '{save_path}'")
+        print(f"[OK] Severity distribution saved -> '{save_path}'")
     return fig
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 5. FOLIUM TRAFFIC HEATMAP
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 # Approximate city-centre coordinates for simulated segments
 SEGMENT_COORDS = {
@@ -223,15 +223,15 @@ def generate_folium_heatmap(
     os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
     m.save(output_path)
     try:
-        print(f"[OK] Folium heatmap saved → '{output_path}'")
+        print(f"[OK] Folium heatmap saved -> '{output_path}'")
     except (ValueError, OSError):
         pass
     return output_path
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 6. METRICS COMPARISON TABLE
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def print_metrics_table(results: dict) -> pd.DataFrame:
     """Print a formatted comparison table of model evaluation metrics."""
@@ -241,7 +241,7 @@ def print_metrics_table(results: dict) -> pd.DataFrame:
             "Model": r.get("model", name),
             "MAE": round(r["MAE"], 2),
             "RMSE": round(r["RMSE"], 2),
-            "R²": round(r["R2"], 4),
+            "R�": round(r["R2"], 4),
         })
     df = pd.DataFrame(rows)
     print("\n" + "=" * 45)

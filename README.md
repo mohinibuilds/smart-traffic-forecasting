@@ -29,14 +29,54 @@ smart_traffic_forecasting/
 │   └── saved/
 │       ├── feature_scaler.pkl    # Fitted MinMaxScaler
 │       ├── random_forest.pkl     # Trained RF model
-│       ├── xgboost.pkl           # Trained XGBoost model
-│       └── lstm_final.keras      # Trained LSTM model
+│       └── xgboost.pkl           # Trained XGBoost model
 │
 ├── assets/
 │   └── traffic_heatmap.html      # Folium-generated congestion heatmap
 │
 └── notebooks/                    # (Optional) Jupyter exploration notebooks
 ```
+
+---
+
+## ☁️ Deploy to Streamlit Community Cloud (free)
+
+> **Note:** This is a Python/Streamlit app. It cannot be deployed to Vercel (Node.js/static only).
+> The correct free hosting platform is **[Streamlit Community Cloud](https://share.streamlit.io)**.
+
+### Steps
+
+1. **Push this repo to GitHub** (public or private):
+   ```bash
+   git add .
+   git commit -m "ready for cloud deploy"
+   git push origin main
+   ```
+
+2. **Go to [share.streamlit.io](https://share.streamlit.io)** and sign in with your GitHub account.
+
+3. Click **"New app"** → select your repository → set the **Main file path** to `app.py` → click **Deploy**.
+
+4. Streamlit Cloud will automatically:
+   - Install all packages from `requirements.txt`
+   - Install system packages from `packages.txt` (`libgomp1` for XGBoost)
+   - Generate the synthetic traffic data and train models on first boot (~2 min)
+   - Serve the dashboard at a public `*.streamlit.app` URL
+
+### What works on the cloud
+
+| Feature | Status |
+|---------|--------|
+| Login / Create Account | ✅ Works (new users stored in session; seeded defaults always available) |
+| Traffic forecasting (RF + XGBoost) | ✅ Works — models auto-trained on first run |
+| Historical charts, heatmap | ✅ Works |
+| LSTM model | ⚠️ Not available on cloud (TensorFlow excluded to fit within memory limits) |
+
+### Default login credentials
+| Username | Password |
+|----------|----------|
+| admin    | traffic123 |
+| demo     | demo |
 
 ---
 
@@ -48,8 +88,6 @@ smart_traffic_forecasting/
 | Data Processing | pandas, numpy |
 | Visualization | matplotlib, seaborn, folium |
 | Baseline ML | scikit-learn (Random Forest), XGBoost |
-| Deep Learning | TensorFlow / Keras (LSTM) |
-| Time-Series | statsmodels (ARIMA-ready) |
 | Dashboard | Streamlit |
 
 ---

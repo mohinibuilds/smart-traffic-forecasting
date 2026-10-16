@@ -1,4 +1,4 @@
-﻿"""
+"""
 Data Preprocessing & Feature Engineering
 ------------------------------------------
 - Loads raw traffic CSV
@@ -15,9 +15,9 @@ import joblib
 import os
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 1. LOAD & CLEAN
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def load_and_clean(filepath: str) -> pd.DataFrame:
     """Load raw CSV and perform basic cleaning."""
@@ -36,9 +36,9 @@ def load_and_clean(filepath: str) -> pd.DataFrame:
     return df
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 2. CYCLICAL ENCODING
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def encode_cyclical(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -58,9 +58,9 @@ def encode_cyclical(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 3. LAG FEATURES & ROLLING STATISTICS
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def add_lag_and_rolling_features(df: pd.DataFrame, target_col: str = "vehicle_volume") -> pd.DataFrame:
     """
@@ -97,9 +97,9 @@ def add_lag_and_rolling_features(df: pd.DataFrame, target_col: str = "vehicle_vo
     return df
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 4. FEATURE SELECTION & SCALING
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 FEATURE_COLS = [
     "vehicle_volume_lag1", "vehicle_volume_lag2", "vehicle_volume_lag3", "vehicle_volume_lag24",
@@ -138,7 +138,7 @@ def scale_features(
         scaler = MinMaxScaler()
         X_scaled = scaler.fit_transform(X)
         joblib.dump(scaler, scaler_path)
-        print(f"[OK] Scaler fitted & saved → '{scaler_path}'")
+        print(f"[OK] Scaler fitted & saved -> '{scaler_path}'")
     else:
         scaler = joblib.load(scaler_path)
         X_scaled = scaler.transform(X)
@@ -147,9 +147,9 @@ def scale_features(
     return X_scaled, y, scaler
 
 
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 # 5. FULL PIPELINE
-# ────────────────────────────────────────────────
+# ------------------------------------------------
 
 def build_feature_matrix(
     filepath: str,

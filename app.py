@@ -203,9 +203,13 @@ def _load_users() -> dict:
     return dict(_DEFAULT_USERS)
 
 def _save_users(db: dict):
-    os.makedirs(os.path.dirname(_USERS_FILE), exist_ok=True)
-    with open(_USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(db, f, indent=2)
+    try:
+        os.makedirs(os.path.dirname(_USERS_FILE), exist_ok=True)
+        with open(_USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(db, f, indent=2)
+    except OSError:
+        # Read-only filesystem (e.g. Streamlit Community Cloud) — skip silently.
+        pass
 
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -347,11 +351,15 @@ XGB_PATH    = os.path.join(_ROOT, "models", "saved", "xgboost.pkl")
 
 
 def _ensure_models_exist():
-    """Auto-train all models if they are not present (first cloud run)."""
+    """Auto-train all models if they are not present (first cloud run).
+
+    Uses reduced hyperparameters (50 trees / 100 rounds) to stay within
+    the ~512 MB RAM available on Render / Streamlit Cloud free tiers.
+    """
     if not os.path.exists(RF_PATH) or not os.path.exists(SCALER_PATH):
         import sys
         sys.path.insert(0, _SRC)
-        with st.spinner("⚙️ First run — generating data & training models (2–3 min)..."):
+        with st.spinner("⚙️ First run — generating data & training models (~1 min)..."):
             # Generate data if needed
             if not os.path.exists(DATA_PATH):
                 from data_generator import generate_traffic_dataset
@@ -366,9 +374,28 @@ def _ensure_models_exist():
                 fit_scaler=True,
             )
 
-            # Train RF + XGBoost
-            from baseline_models import run_baseline_training
-            run_baseline_training(X, y, feature_names=FEATURE_COLS)
+            # Train RF (lightweight: 50 trees, depth 10)
+            from baseline_models import train_random_forest, train_xgboost
+            os.makedirs(os.path.dirname(RF_PATH), exist_ok=True)
+            split = int(len(X) * 0.8)
+            train_random_forest(
+                X[:split], y[:split],
+                n_estimators=50,
+                max_depth=10,
+                save_path=RF_PATH,
+            )
+
+            # Train XGBoost (lightweight: 100 rounds)
+            try:
+                train_xgboost(
+                    X[:split], y[:split],
+                    n_estimators=100,
+                    learning_rate=0.1,
+                    max_depth=6,
+                    save_path=XGB_PATH,
+                )
+            except Exception:
+                pass  # XGBoost optional — RF alone is enough
 
         st.success("Models trained! Loading dashboard...")
         st.rerun()

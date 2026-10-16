@@ -401,7 +401,7 @@ def _ensure_models_exist():
         st.rerun()
 
 
-@st.cache_data(show_spinner="Loading traffic dataset...")
+@st.cache_data(show_spinner=False)
 def load_data():
     from preprocessing import load_and_clean, encode_cyclical, add_lag_and_rolling_features
 
@@ -416,7 +416,7 @@ def load_data():
     return df
 
 
-@st.cache_resource(show_spinner="Loading ML models...")
+@st.cache_resource(show_spinner=False)
 def load_models():
     import joblib
     models = {}
@@ -427,7 +427,7 @@ def load_models():
     return models
 
 
-@st.cache_resource(show_spinner="Loading scaler...")
+@st.cache_resource(show_spinner=False)
 def load_scaler():
     import joblib
     if os.path.exists(SCALER_PATH):
@@ -898,7 +898,21 @@ st.sidebar.caption(f"Signed in as **{st.session_state.login_user}**")
 # MAIN
 # ────────────────────────────────────────────────
 
-# ── Branded top header bar ──
+# ── Auto-train on first cloud run if models missing ──
+# Must run before top-bar so the spinner is the first thing the user sees.
+_ensure_models_exist()
+
+# ── Load data & models ──
+with st.spinner("Loading dashboard..."):
+    df = load_data()
+    models = load_models()
+    scaler = load_scaler()
+
+if scaler is None:
+    st.error("⚠️ Models could not be loaded. Please refresh the page.")
+    st.stop()
+
+# ── Branded top header bar (rendered only after models confirmed ready) ──
 st.markdown(
     f"""
     <div class="top-bar">
@@ -914,18 +928,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-# ── Auto-train on first cloud run if models missing ──
-_ensure_models_exist()
-
-# ── Load data ──
-df = load_data()
-models = load_models()
-scaler = load_scaler()
-
-if scaler is None:
-    st.error("⚠️ Models could not be loaded. Please refresh the page.")
-    st.stop()
 
 # ── Filter by segment ──
 df_seg = df[df["segment_id"] == segment_id].copy()
